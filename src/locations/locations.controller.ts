@@ -18,8 +18,6 @@ export class LocationsController {
   @Get('/cpo')
   @UseInterceptors(PaginationInterceptor)
   getAllCpoLocations(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number, @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number) {
-    // The controller is now clean. It just calls the service.
-    // The interceptor will handle formatting the final response.
     return this.cpoService.findAll(page, limit);
   }
 
