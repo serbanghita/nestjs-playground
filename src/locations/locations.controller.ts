@@ -1,40 +1,37 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { LocationsService } from './locations.service';
+import { Controller, DefaultValuePipe, Get, ParseIntPipe, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Location } from './location.entity';
 import { randomInt } from '../utils';
 import { AuthGuard } from '../auth/auth.guard';
-import { Actor } from '../auth/actor.decorator';
-import { ActorRole } from '../auth/actor-role.enum';
+import { LocationsCpoService } from './locations-cpo.service';
+import { LocationsEmpService } from './locations-emp.service';
+import { LocationsAdminService } from './locations-admin.service';
+import { PaginationInterceptor } from '../pagination.interceptor';
 
 @Controller('locations')
 export class LocationsController {
-  constructor(private readonly service: LocationsService) {}
+  constructor(
+    private readonly cpoService: LocationsCpoService,
+    private readonly empService: LocationsEmpService,
+    private readonly adminService: LocationsAdminService,
+  ) {}
 
-  // This single method now handles both /cpo and /emp routes.
-  // The guard ensures it's only accessible via those paths with a valid token.
-  @Get(['/cpo', '/emp'])
-  @UseGuards(AuthGuard)
-  getLocationsForActor(@Actor() actor: ActorRole): Promise<Location[]> {
-    console.log(`Request received from actor: ${actor}`);
-    // You can now use the 'actor' variable to implement specific business logic
-    // For example: return this.service.findAllForActor(actor);
-    return this.service.findAll();
+  @Get('/cpo')
+  @UseInterceptors(PaginationInterceptor)
+  getAllCpoLocations(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number, @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number) {
+    // The controller is now clean. It just calls the service.
+    // The interceptor will handle formatting the final response.
+    return this.cpoService.findAll(page, limit);
   }
 
-  // A generic route without the guard
-  @Get('/')
-  getAllLocations(): Promise<Location[]> {
-    return this.service.findAll();
+  @Get('/emp')
+  @UseGuards(AuthGuard)
+  getAllEmpLocations(): Promise<Location[]> {
+    return this.empService.findAll();
   }
 
   // This route is unprotected as it doesn't have the @UseGuards decorator
   @Post('add')
   addLocation(): Promise<Location> {
-    return this.service.insert(
-      crypto.randomUUID(),
-      randomInt(1, 10),
-      randomInt(1, 20),
-      true,
-    );
+    return this.adminService.insert(crypto.randomUUID(), randomInt(1, 10), randomInt(1, 20), true);
   }
 }

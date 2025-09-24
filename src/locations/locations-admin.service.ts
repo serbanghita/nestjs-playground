@@ -4,18 +4,13 @@ import { Repository } from 'typeorm';
 import { Location } from './location.entity';
 
 @Injectable()
-export class LocationsService {
+export class LocationsAdminService {
   constructor(
     @InjectRepository(Location)
     private locationsRepository: Repository<Location>,
   ) {}
 
-  insert(
-    id: string,
-    longitude: number,
-    latitude: number,
-    isActive: boolean,
-  ): Promise<Location> {
+  insert(id: string, longitude: number, latitude: number, isActive: boolean): Promise<Location> {
     const user = this.locationsRepository.create({
       id,
       longitude,

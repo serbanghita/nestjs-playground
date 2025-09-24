@@ -1,18 +1,19 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { LocationsService } from './locations.service';
 import { LocationsController } from './locations.controller';
 import { Location } from './location.entity';
-import { CredentialsModule } from '../credentials/credentials.module'; // Import CredentialsModule
+import { CredentialsModule } from '../credentials/credentials.module';
+import { LocationsCpoService } from './locations-cpo.service';
+import { LocationsEmpService } from './locations-emp.service';
+import { LocationsAdminService } from './locations-admin.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Location]),
-    CredentialsModule, // Add it here
+  imports: [TypeOrmModule.forFeature([Location]), CredentialsModule],
+  providers: [
+    LocationsCpoService, // Provide the new CPO service
+    LocationsEmpService, // Provide the new EMP service,
+    LocationsAdminService, // For admin purposes.
   ],
-  providers: [LocationsService],
   controllers: [LocationsController],
-  // The 'exports' property is generally not needed here unless another module needs to import TypeOrm entities from this one.
-  // exports: [TypeOrmModule],
 })
 export class LocationsModule {}
