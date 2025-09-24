@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Credential } from './credential.entity';
+import { ActorRole } from '../auth/actor-role.enum';
 
 @Injectable()
 export class CredentialsService {
@@ -10,7 +11,15 @@ export class CredentialsService {
     private credentialsRepository: Repository<Credential>,
   ) {}
 
-  async findOneByToken(token: string): Promise<Credential | null> {
-    return this.credentialsRepository.findOneBy({ token, isActive: true });
+  /**
+   * Finds a credential by token and role.
+   * A token can exist for multiple roles, so the role is essential for lookup.
+   */
+  async findOneByTokenAndRole(token: string, role: ActorRole): Promise<Credential | null> {
+    return this.credentialsRepository.findOneBy({
+      token,
+      role,
+      isActive: true,
+    });
   }
 }

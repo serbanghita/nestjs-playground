@@ -1,13 +1,7 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { CredentialsService } from '../credentials/credentials.service';
 import { ActorRole } from './actor-role.enum';
 import { RequestWithActor } from './actor.decorator';
-import { Request } from 'express';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -21,29 +15,29 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid actor path');
     }
 
-    // ... (rest of the token logic remains the same)
-
     const token = this.extractTokenFromHeader(request);
     if (!token) {
       throw new UnauthorizedException('Authorization token not found');
     }
+
     const decodedToken = Buffer.from(token, 'base64').toString('ascii');
-    const credential =
-      await this.credentialsService.findOneByToken(decodedToken);
+
+    // Validate the token against the specific role determined by the URL
+    const credential = await this.credentialsService.findOneByTokenAndRole(decodedToken, actor);
+
     if (!credential) {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException('Invalid token for this role');
     }
 
-    request['actor'] = actor;
+    request.actor = actor;
     return true;
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
+  private extractTokenFromHeader(request: RequestWithActor): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Token' ? token : undefined;
   }
 
-  // Update the return type to use the enum
   private getActorFromPath(path: string): ActorRole | null {
     if (path.includes('/cpo')) {
       return ActorRole.EMP;
