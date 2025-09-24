@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: nest_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: dbpass
+      POSTGRES_DB: nestappdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  nestapp:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: nest_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: dbuser
+      DATABASE_PASSWORD: dbpass
+      DATABASE_NAME: nestappdb
+      CHOKIDAR_USEPOLLING: true  # Crucial for watch mode
+      CHOKIDAR_INTERVAL: 500     # Polling interval in ms
+    volumes:
+      - ./:/app                # Mount current directory
+      - /app/node_modules      # Exclude node_modules from host
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:
